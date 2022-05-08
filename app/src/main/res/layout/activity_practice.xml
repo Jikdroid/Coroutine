@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:backgroundTint="@color/teal_200"
-        android:onClick="@{() -> activity.jobLazy()}"
+        android:onClick="@{() -> activity.startSuspendFun()}"
         android:text="Coroutine 연습"
         android:textSize="30sp" />
 
