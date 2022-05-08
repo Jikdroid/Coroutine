@@ -19,21 +19,29 @@ class PracticeActivity : AppCompatActivity(){
 
     fun executeSuspendFun(){
         CoroutineScope(Dispatchers.Main).launch {
-            jobStatus()
+            jobException()
         }
     }
 
-    private suspend fun jobStatus(){
-        val job = CoroutineScope(Dispatchers.IO).launch(start = CoroutineStart.LAZY) {
-           delay(1000)
+    private suspend fun jobException(){
+        val exceptionHandler = CoroutineExceptionHandler { _, exception ->
+            println("CoroutineExceptionHandler : $exception")
+
+            when(exception){
+                is IllegalArgumentException -> println("More Arguement Needed To Process Job")
+                is InterruptedException -> println("Job Interrupted")
+            }
         }
-        println(job.isActive)    // 실행중인지 여부 표시
-        println(job.isCancelled) // cancel 요청되었는지 여부 표시
-        println(job.isCompleted) // 실행이 완료 되었거나 cancel 이 완료 되었는지를 표시
-        job.cancel()
-        println(job.isActive)    // 실행중인지 여부 표시
-        println(job.isCancelled) // cancel 요청되었는지 여부 표시
-        println(job.isCompleted) // 실행이 완료 되었거나 cancel 이 완료 되었는지를 표시
+
+        val job1 = CoroutineScope(Dispatchers.IO).launch(exceptionHandler) { // root coroutine, running in GlobalScope
+            throw IllegalArgumentException()
+        }
+
+        val job2 = CoroutineScope(Dispatchers.IO).launch(exceptionHandler) {
+            throw InterruptedException()
+        }
+
+        delay(1000)
     }
 }
 
