@@ -16,28 +16,24 @@ class PracticeActivity : AppCompatActivity(){
 
 
     }
-    fun startSuspendFun(){
-        CoroutineScope(Dispatchers.Main).launch {
-            jobCancel()
-        }
 
+    fun executeSuspendFun(){
+        CoroutineScope(Dispatchers.Main).launch {
+            jobStatus()
+        }
     }
 
-    private suspend fun jobCancel(){
-        val job = CoroutineScope(Dispatchers.IO).launch {
+    private suspend fun jobStatus(){
+        val job = CoroutineScope(Dispatchers.IO).launch(start = CoroutineStart.LAZY) {
            delay(1000)
         }
-
-        job.invokeOnCompletion { throwable ->       // Job 이 취소나 실행 완료 될 때 호출된다.
-            when(throwable){
-                is CancellationException -> println("Cancelled")
-                null -> println("Completed with no error")
-            }
-        }
-
-        job.cancel("Job Cancelled by user",InterruptedException("Cancelled Forcibly"))  // Job 취소(메세지, 원인)
-
-        delay(3000)
+        println(job.isActive)    // 실행중인지 여부 표시
+        println(job.isCancelled) // cancel 요청되었는지 여부 표시
+        println(job.isCompleted) // 실행이 완료 되었거나 cancel 이 완료 되었는지를 표시
+        job.cancel()
+        println(job.isActive)    // 실행중인지 여부 표시
+        println(job.isCancelled) // cancel 요청되었는지 여부 표시
+        println(job.isCompleted) // 실행이 완료 되었거나 cancel 이 완료 되었는지를 표시
     }
 }
 
