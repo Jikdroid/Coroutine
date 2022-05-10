@@ -26,18 +26,19 @@ class PracticeActivity : AppCompatActivity(){
     }
 
     private suspend fun supervisorJob() {
-        val supervisor = SupervisorJob()
+        CoroutineScope(Dispatchers.IO).launch { // 부모 코루틴은 supervisorScope 외부에 있어 SupervisorJob() 적용 안됨
 
-        CoroutineScope(Dispatchers.IO).launch {
-            val firstChildJob = launch(Dispatchers.IO+ supervisor){
-                throw AssertionError("첫 째 Job이 AssertionError로 인해 취소됩니다.")
+            supervisorScope {
+                val firstChildJob = launch(Dispatchers.IO) { // 자식 코루틴은 supervisorScope 내부에 있어 SupervisorJob 적용됨
+                    throw AssertionError("첫 째 Job이 AssertionError로 인해 취소됩니다.")
+                }
+                val secondChildJob = launch(Dispatchers.Default) { // 자식 코루틴은 supervisorScope 내부에 있어 SupervisorJob 적용됨
+                    delay(1000)
+                    println("둘 째 Job이 살아있습니다")
+                }
+                firstChildJob.join()
+                secondChildJob.join()
             }
-            val secondChildJob = launch(Dispatchers.Default){
-                delay(1000)
-                println("둘 째 Job이 살아있습니다")
-            }
-            firstChildJob.join()
-            secondChildJob.join()
         }.join()
     }
 }
