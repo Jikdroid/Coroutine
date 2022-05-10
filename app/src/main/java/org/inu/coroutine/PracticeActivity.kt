@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.databinding.DataBindingUtil
 import kotlinx.coroutines.*
 import org.inu.coroutine.databinding.ActivityPracticeBinding
+import java.lang.AssertionError
 import java.lang.IllegalArgumentException
 
 class PracticeActivity : AppCompatActivity(){
@@ -20,20 +21,24 @@ class PracticeActivity : AppCompatActivity(){
 
     fun executeSuspendFun(){
         CoroutineScope(Dispatchers.Main).launch {
-            coroutineContext()
+            supervisorJob()
         }
     }
 
-    private fun coroutineContext() {
-        val exceptionHandler = CoroutineExceptionHandler { coroutineContext, throwable -> }
-        val coroutineContext = Dispatchers.IO + exceptionHandler
+    private suspend fun supervisorJob() {
+        val supervisor = SupervisorJob()
 
-        val exceptionHandlerFromContext = coroutineContext[exceptionHandler.key]
-        if (exceptionHandler == exceptionHandlerFromContext){
-            println(true)
-        }
-        val minusContext  = coroutineContext.minusKey(exceptionHandler.key)
-        println(minusContext)
+        CoroutineScope(Dispatchers.IO).launch {
+            val firstChildJob = launch(Dispatchers.IO+ supervisor){
+                throw AssertionError("첫 째 Job이 AssertionError로 인해 취소됩니다.")
+            }
+            val secondChildJob = launch(Dispatchers.Default){
+                delay(1000)
+                println("둘 째 Job이 살아있습니다")
+            }
+            firstChildJob.join()
+            secondChildJob.join()
+        }.join()
     }
 }
 
