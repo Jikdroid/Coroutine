@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.databinding.DataBindingUtil
 import kotlinx.coroutines.*
 import org.inu.coroutine.databinding.ActivityPracticeBinding
+import java.lang.IllegalArgumentException
 
 class PracticeActivity : AppCompatActivity(){
     private lateinit var binding: ActivityPracticeBinding
@@ -19,29 +20,26 @@ class PracticeActivity : AppCompatActivity(){
 
     fun executeSuspendFun(){
         CoroutineScope(Dispatchers.Main).launch {
-            jobException()
+            deferredException()
         }
     }
 
-    private suspend fun jobException(){
-        val exceptionHandler = CoroutineExceptionHandler { _, exception ->
-            println("CoroutineExceptionHandler : $exception")
-
-            when(exception){
-                is IllegalArgumentException -> println("More Arguement Needed To Process Job")
+    private suspend fun deferredException(){
+        val exceptionHandler = CoroutineExceptionHandler { coroutineContext, throwable ->
+            when (throwable){
+                is IllegalArgumentException -> println("More Argument Needed To Process Job")
                 is InterruptedException -> println("Job Interrupted")
             }
         }
 
-        val job1 = CoroutineScope(Dispatchers.IO).launch(exceptionHandler) { // root coroutine, running in GlobalScope
+
+        val deferred = CoroutineScope(Dispatchers.IO).async(exceptionHandler) {
             throw IllegalArgumentException()
+            arrayOf(1,2,3)
         }
-
-        val job2 = CoroutineScope(Dispatchers.IO).launch(exceptionHandler) {
-            throw InterruptedException()
-        }
-
-        delay(1000)
+        CoroutineScope(Dispatchers.IO).launch(exceptionHandler) {
+            deferred.await()
+        }.join()
     }
 }
 
